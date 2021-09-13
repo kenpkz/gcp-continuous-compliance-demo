@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "you-bucket"
+    bucket = "your-bucket"
     prefix = "env/dev"
   }
 }
