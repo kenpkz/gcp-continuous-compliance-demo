@@ -1,0 +1,55 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - '-c'
+      - |
+         docker run -v $(pwd):/path checkmarx/kics:latest scan -p "/path" -o "/path/$BUILD_ID"
+         exit 0
+    id: Run KICS
+    entrypoint: sh
+  - name: gcr.io/cloud-builders/gcloud
+    args:
+      - '-c'
+      - |
+          gsutil cp ./$BUILD_ID/* gs://kics-results/$BUILD_ID.json
+          exit 0
+    id: Upload scan results
+    entrypoint: sh
+  - name: ubuntu:latest
+    id: Verify results
+    entrypoint: sh
+    args: 
+      - '-c'
+      - | 
+          apt-get update
+          apt-get install jq -y
+          high=$(cat ./$BUILD_ID/results.json | jq '.severity_counters["HIGH"]')
+          medium=$(cat ./$BUILD_ID/results.json | jq '.severity_counters["MEDIUM"]')
+          cat > compare.sh <<EOF
+          echo Scan Results
+          cat results.json | jq '.queries'
+          if [ $high -gt 0 ]
+          then
+            echo -----------------------------------------------------
+            echo - There are High or Medium findings, please remedy. -
+            echo -----------------------------------------------------
+            exit 1
+          elif [ $medium -gt 0 ]
+          then
+            echo -----------------------------------------------------
+            echo - There are High or Medium findings, please remedy. -
+            echo -----------------------------------------------------
+            exit 1
+          else
+            exit 0
+          fi
+          EOF
+          chmod 755 ./compare.sh
+          ./compare.sh
+  - name: gcr.io/cloud-builders/gcloud
+    id: Trigger next steps
+    entrypoint: sh
+    args: 
+      - '-c'
+      - | 
+          gcloud pubsub topics publish projects/container-workload-1/topics/KICS-pipeline --message="ready"
