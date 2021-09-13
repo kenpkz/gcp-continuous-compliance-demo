@@ -12,7 +12,7 @@ def ssh_remedy(event, context):
     rule_long = content_json['resource']['name']
     rule = rule_long.split('/')[-1]
     project = content_json['resource']['projectDisplayName']
-    delete = fw_client.delete(project = project, firewall = rule)
+    fw_client.delete(project = project, firewall = rule)
 
 
 
