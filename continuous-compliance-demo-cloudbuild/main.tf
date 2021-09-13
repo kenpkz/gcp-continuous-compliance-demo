@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "zken-tfstate"
+    bucket = "you-bucket"
     prefix = "env/dev"
   }
 }
