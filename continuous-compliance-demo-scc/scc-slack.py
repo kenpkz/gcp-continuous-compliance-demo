@@ -2,7 +2,7 @@ import base64
 import json
 import requests
 
-TOKEN = "xoxb-1402606383398-2460246669030-nXhBd7RqJJEGlJcn5Be6HfAz"
+TOKEN = "your token here"
 
 def send_slack_chat_notification(event, context):
     pubsub_message = base64.b64decode(event['data']).decode('utf-8')
